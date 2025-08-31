@@ -1,0 +1,12 @@
+overwrite: true
+schema: "./src/schema.graphql" # Path to your GraphQL schema file
+documents: "src/**/*.tsx" # Path to your files containing GraphQL operations (queries, mutations)
+generates:
+  src/generated/graphql.tsx: # Output file for the generated types
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+      - "typescript-react-apollo" # Add this if you use React Apollo
+    config:
+      withHooks: true # For typescript-react-apollo
+      # You can add other plugin-specific configurations here

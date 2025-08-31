@@ -1,0 +1,238 @@
+scalar Date
+
+enum Language {
+  ZH_HK
+  EN
+}
+
+enum ItemCondition {
+  NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ItemStatus {
+  AVAILABLE
+  EXCHANGEABLE
+  GIFT
+  RESERVED
+  TRANSFERRED
+}
+
+type Location {
+  latitude: Float!
+  longitude: Float!
+  geohash: String
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+  EXCHANGE_POINT_ADMIN # 交換點管理員
+}
+
+type Category {
+  category: String!
+  count: Int!
+}
+
+type User {
+  id: ID!
+  email: String!
+  nickname: String
+  location: Location
+  address: String
+  role: Role!
+  isActive: Boolean!
+  isVerified: Boolean!
+  contactMethods: [ContactMethod!]
+  exchangePoints: [String!]
+  itemCategory: [Category!]
+  createdAt: Date!
+}
+
+type ContactMethod {
+  type: String!
+  value: String!
+  isPublic: Boolean!
+}
+
+type Item {
+  id: ID!
+  ownerId: ID!
+  holderId: ID
+  name: String!
+  description: String
+  condition: ItemCondition!
+  category: [String!]!
+  status: ItemStatus!
+  images: [String!]
+  thumbnails: [String!]
+  publishedYear: Int
+  language: Language!
+  location: Location
+  createdAt: Date!
+  updatedAt: Date!
+  transactions: [Transaction!]
+}
+
+type NewsPost {
+  id: ID!
+  title: String!
+  content: String!
+  images: [String!]
+  relatedItems: [Item!]
+  createdAt: Date!
+  updatedAt: Date!
+  isVisible: Boolean!
+  user: User!
+  tags: [String!]
+}
+
+type Transaction {
+  id: ID!
+  item: Item!
+  requestor: User
+  status: TransactionStatus!
+  createdAt: Date!
+  updatedAt: Date!
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  TRANSFERED
+  COMPLETED
+  CANCELLED
+}
+
+type SignedUrlResponse {
+  signedUrl: String!
+  gsUrl: String!
+  expires: Float!
+}
+
+type Query {
+  user(id: ID!): User
+  me: User
+  users(address: String, limit: Int, offset: Int): [User!]!
+  exchangePoints(limit: Int, offset: Int): [User!]!
+  item(id: ID!): Item
+  items(
+    category: [String!]
+    address: String
+    status: ItemStatus
+    keyword: String
+    limit: Int
+    offset: Int
+  ): [Item!]!
+  itemsByLocation(
+    latitude: Float!
+    longitude: Float!
+    radiusKm: Float!
+    category: [String!]
+    status: ItemStatus
+    keyword: String
+    limit: Int
+    offset: Int
+  ): [Item!]!
+  itemsByUser(
+    userId: ID!
+    category: [String!]
+    status: ItemStatus
+    keyword: String
+    limit: Int
+    offset: Int
+    isExchangePointItem: Boolean
+  ): [Item!]!
+  recentAddedItems(limit: Int, offset: Int, category: [String!]): [Item!]!
+  transaction(id: ID!): Transaction
+  transactionsByItem(itemId: ID!): [Transaction!]!
+  openTransactionsByItem(itemId: ID!): [Transaction!]!
+  openTransactionsByUser(userId: ID!): [Transaction!]!
+  transactionsByUser(userId: ID!): [Transaction!]!
+  transactions(userId: ID, itemId: ID): [Transaction!]!
+  newsPost(id: ID!): NewsPost
+  newsRecentPosts(
+    keyword: String
+    tags: [String!]
+    limit: Int
+    offset: Int
+  ): [NewsPost!]!
+  geocodeAddress(address: String!): Location
+  recentUpdateCategories(limit: Int): [String!]!
+  hotCategories(limit: Int): [String!]!
+  defaultCategories: [String!]!
+}
+
+type Mutation {
+  createUser(email: String!, address: String, nickname: String): User!
+  updateUser(
+    nickname: String
+    address: String
+    contactMethods: [ContactMethodInput!]
+    exchangePoints: [String!]
+  ): User!
+  deleteUser(id: ID!): Boolean!
+  createItem(
+    name: String!
+    description: String
+    condition: ItemCondition!
+    category: [String!]!
+    status: ItemStatus!
+    images: [String!]
+    publishedYear: Int
+    language: Language!
+  ): Item!
+  updateItem(
+    id: ID!
+    name: String
+    description: String
+    condition: ItemCondition
+    category: [String!]
+    status: ItemStatus
+    images: [String!]
+    publishedYear: Int
+    language: Language
+  ): Item!
+  deleteItem(id: ID!): Boolean!
+  createTransaction(itemId: ID!): Transaction!
+  approveTransaction(id: ID!): Transaction!
+  transferTransaction(id: ID!): Transaction!
+  receiveTransaction(id: ID!): Transaction!
+  cancelTransaction(id: ID!): Boolean!
+  createNewsPost(
+    title: String!
+    content: String!
+    images: [String!]
+    relatedItemIds: [ID!]
+    tags: [String!]
+  ): NewsPost!
+  updateNewsPost(
+    id: ID!
+    title: String
+    content: String
+    images: [String!]
+    relatedItemIds: [ID!]
+    tags: [String!]
+  ): NewsPost!
+  hideNewsPost(id: ID!): Boolean!
+  generateSignedUrl(
+    fileName: String!
+    contentType: String!
+    folder: String
+  ): SignedUrlResponse!
+}
+
+input LocationInput {
+  latitude: Float!
+  longitude: Float!
+}
+
+input ContactMethodInput {
+  type: String!
+  value: String!
+  isPublic: Boolean!
+}
